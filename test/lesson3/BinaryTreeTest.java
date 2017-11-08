@@ -25,12 +25,20 @@ public class BinaryTreeTest {
         tree.add(15);
         tree.add(20);
         tree.add(14);
-     //   assertEquals(10, tree.size());
-        tree.add(16);
-        assertTrue(tree.contains(8));
+        assertEquals(10, tree.size());
         assertTrue(tree.checkInvariant());
-        tree.prn();
-        tree.remove(10);
+        assertTrue(tree.contains(5));
+        assertTrue(tree.remove(5));
+        assertFalse(tree.contains(5));
+        assertEquals(9,tree.size());
+        assertFalse(tree.remove(5));
+        assertTrue(tree.checkInvariant());
+        tree.remove(7);
+        tree.remove(8);
+        assertFalse(tree.remove(123));
+        assertEquals(7,tree.size());
+        assertTrue(tree.remove(10));
+        assertTrue(tree.checkInvariant());
         tree.prn();
     }
 

@@ -21,7 +21,6 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
     }
 
     private Node<T> root = null;
-    private Node<T> parent;
     private int size = 0;
 
     @Override
@@ -59,21 +58,36 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
     @Override
     public boolean remove(Object o) {
         T key = (T) o;
-        parent = null;
-        if (size() == 1) root = null;
-        else if (root.value == key && root.left != null && root.right == null) root = root.left;
-        else if (root.value == key && root.left == null && root.right != null) root = root.right;
-        else
-            remove(root, key);
-        return true;
+        int oldSize = size;
+        Node<T> parent = null;
+        if (root.value == key) {
+            if (root.left == null && root.right == null) root = null;
+            else if (root.left != null && root.right == null) root = root.left;
+            else if (root.left == null && root.right != null) root = root.right;
+            else {
+                if (root.right.left == null) {
+                    root.right.left = root.left;
+                    root = root.right;
+                } else {
+                    Node n = searchToRemove(root.right);
+                    n.left.left = root.left;
+                    n.left.right = root.right;
+                    root = n.left;
+                    n.left = null;
+                }
+            }
+            size--;
+        } else remove(root, key, parent);
+        return (size < oldSize);
     }
 
-    private void remove(Node<T> t, T key) {
-        if (t == null) return;
+    private int remove(Node<T> t, T key, Node<T> parent) {
+        if (t == null) return size;
         if (t.value != key) parent = t;
-        if (key.compareTo(t.value) < 0) remove(t.left, key);
-        if (key.compareTo(t.value) > 0) remove(t.right, key);
+        if (key.compareTo(t.value) < 0) remove(t.left, key, parent);
+        if (key.compareTo(t.value) > 0) remove(t.right, key, parent);
         if (t.value == key) {
+            size--;
             if (t.right == null && t.left == null) {         //нет потомков
                 if (t == parent.right) parent.right = null;
                 else parent.left = null;
@@ -86,33 +100,24 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
             } else {                                          //оба
                 if (t.right.left == null) {                   // проверяем сразу, мб правый потомок-найменьший
                     t.right.left = t.left;
-                    if (t != root) {                          // бесит эта проверка, но не могу придумать как обойти
-                        if (t == parent.right) parent.right = t.right;
-                        else parent.left = t.right;
-                    } else root = root.right;
+                    if (t == parent.right) parent.right = t.right;
+                    else parent.left = t.right;
                 } else {
                     Node n = searchToRemove(t.right);    //родитель элемента который будем переставлять/поднимать
-                    if (t != root) {
-                        if (t == parent.right) parent.right = n.left;
-                        else parent.left = n.left;
-                        n.left.left = t.left;
-                        n.left.right = t.right;
-                    } else {
-                        n.left.left = root.left;
-                        n.left.right = root.right;
-                        root = n.left;
-                    }
-
+                    if (t == parent.right) parent.right = n.left;
+                    else parent.left = n.left;
+                    n.left.left = t.left;
+                    n.left.right = t.right;
                     n.left = null;
                 }
             }
         }
+        return size;
     }
 
     private Node searchToRemove(Node t) {
         if (t.left.left == null) return t;
         else return searchToRemove(t.left);
-
     }
 
     @Override
