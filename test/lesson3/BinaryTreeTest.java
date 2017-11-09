@@ -2,6 +2,8 @@ package lesson3;
 
 import org.junit.Test;
 
+import java.util.Iterator;
+
 import static org.junit.Assert.*;
 
 public class BinaryTreeTest {
@@ -30,16 +32,28 @@ public class BinaryTreeTest {
         assertTrue(tree.contains(5));
         assertTrue(tree.remove(5));
         assertFalse(tree.contains(5));
-        assertEquals(9,tree.size());
+        assertEquals(9, tree.size());
         assertFalse(tree.remove(5));
         assertTrue(tree.checkInvariant());
         tree.remove(7);
         tree.remove(8);
         assertFalse(tree.remove(123));
-        assertEquals(7,tree.size());
+        assertEquals(7, tree.size());
         assertTrue(tree.remove(10));
         assertTrue(tree.checkInvariant());
         tree.prn();
+        assertEquals(6, tree.size());
+        Iterator<Integer> itt = tree.iterator();
+        System.out.println(itt.next());
+        System.out.println(itt.next()); //печатается 3
+        itt.remove(); //удаляю её
+        assertFalse(tree.contains(3));
+        System.out.println(itt.next());
+        assertTrue(itt.hasNext());
+        System.out.println(itt.next());
+        System.out.println(itt.next()); // последний элемент
+        assertFalse(itt.hasNext());
+
     }
 
 }

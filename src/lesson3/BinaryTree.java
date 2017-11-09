@@ -81,8 +81,8 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
         return (size < oldSize);
     }
 
-    private int remove(Node<T> t, T key, Node<T> parent) {
-        if (t == null) return size;
+    private void remove(Node<T> t, T key, Node<T> parent) {
+        if (t == null) return;
         if (t.value != key) parent = t;
         if (key.compareTo(t.value) < 0) remove(t.left, key, parent);
         if (key.compareTo(t.value) > 0) remove(t.right, key, parent);
@@ -112,7 +112,6 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
                 }
             }
         }
-        return size;
     }
 
     private Node searchToRemove(Node t) {
@@ -149,17 +148,45 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
     public class BinaryTreeIterator implements Iterator<T> {
 
         private Node<T> current = null;
+        private Node<T> myNext ;
+        private Stack<Node<T>> stack;
+        Node<T> found;
+
+        int sizeForItertor = size;
 
         private BinaryTreeIterator() {
+            myNext = root;
+            stack = new Stack<Node<T>>();
         }
 
         private Node<T> findNext() {
-            throw new UnsupportedOperationException();
+            if (sizeForItertor == 0) {
+                return null;
+            } else {
+                stack.push(myNext);
+                found = myNext;
+                if (myNext.left != null) {
+                    myNext = myNext.left;
+                } else if (myNext.right != null) {
+                    myNext = myNext.right;
+                } else if (sizeForItertor != 1) myNext = back();
+                else myNext = null;
+                sizeForItertor--;
+                return found;
+            }
         }
+
+        private Node<T> back() {
+            Node<T> last = stack.pop();
+            if (stack.peek().left == last && stack.peek().right != null)
+                return stack.peek().right;
+            else return back();
+        }
+
 
         @Override
         public boolean hasNext() {
-            return findNext() != null;
+            return myNext != null;
         }
 
         @Override
@@ -168,7 +195,19 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
             if (current == null) throw new NoSuchElementException();
             return current.value;
         }
+
+        @Override
+        public void remove() {
+            stack.pop();
+            BinaryTree.this.remove(found.value);
+            Node<T> add = stack.peek();
+            if (found.value.compareTo(stack.peek().value) < 0) stack.add(stack.peek().left);
+            else stack.add(stack.peek().right);
+            Node<T> gg = stack.peek();
+            sizeForItertor--;
+        }
     }
+
 
     @NotNull
     @Override
@@ -180,8 +219,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
     public int size() {
         return size;
     }
-
-
+    
     public void prn() {
         Queue<Node> q1 = new LinkedList<Node>();
 
