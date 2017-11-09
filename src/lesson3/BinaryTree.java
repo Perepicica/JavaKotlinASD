@@ -200,11 +200,8 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
         public void remove() {
             stack.pop();
             BinaryTree.this.remove(found.value);
-            Node<T> add = stack.peek();
-            if (found.value.compareTo(stack.peek().value) < 0) stack.add(stack.peek().left);
-            else stack.add(stack.peek().right);
-            Node<T> gg = stack.peek();
-            sizeForItertor--;
+            if (found.value.compareTo(stack.peek().value) < 0) myNext = stack.peek().left; // исправила, теперь достаются все элементы
+            else myNext = stack.peek().right;
         }
     }
 
@@ -219,7 +216,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
     public int size() {
         return size;
     }
-    
+
     public void prn() {
         Queue<Node> q1 = new LinkedList<Node>();
 
