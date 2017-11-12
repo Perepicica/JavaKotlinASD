@@ -230,7 +230,6 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
                     }
                 }
             }
-
         }
     }
 

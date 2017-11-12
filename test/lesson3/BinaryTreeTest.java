@@ -16,6 +16,7 @@ public class BinaryTreeTest {
 
     @Test
     public void add() {
+
         BinaryTree<Integer> tree1 = new BinaryTree<>();
         tree1.addAll(list1);
         Iterator<Integer> itt1 = tree1.iterator();
