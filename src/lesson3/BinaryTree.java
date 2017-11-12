@@ -70,10 +70,11 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
                     root = root.right;
                 } else {
                     Node n = searchToRemove(root.right);
-                    n.left.left = root.left;
-                    n.left.right = root.right;
+                    Node t = root;
                     root = n.left;
-                    n.left = null;
+                    n.left = n.left.right;
+                    root.left = t.left;
+                    root.right = t.right;
                 }
             }
             size--;
@@ -106,9 +107,14 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
                     Node n = searchToRemove(t.right);    //родитель элемента который будем переставлять/поднимать
                     if (t == parent.right) parent.right = n.left;
                     else parent.left = n.left;
-                    n.left.left = t.left;
-                    n.left.right = t.right;
-                    n.left = null;
+                    n.left = n.left.right;
+                    if (t.value.compareTo(parent.value) > 0) {
+                        parent.right.right = t.right;
+                        parent.right.left = t.left;
+                    } else {
+                        parent.left.right = t.right;
+                        parent.left.left = t.left;
+                    }
                 }
             }
         }
@@ -148,38 +154,43 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
     public class BinaryTreeIterator implements Iterator<T> {
 
         private Node<T> current = null;
-        private Node<T> myNext ;
+        private Node<T> myNext;
         private Stack<Node<T>> stack;
         Node<T> found;
-
         int sizeForItertor = size;
 
         private BinaryTreeIterator() {
-            myNext = root;
             stack = new Stack<Node<T>>();
+            myNext = min(root);
         }
 
         private Node<T> findNext() {
             if (sizeForItertor == 0) {
                 return null;
             } else {
-                stack.push(myNext);
                 found = myNext;
-                if (myNext.left != null) {
-                    myNext = myNext.left;
-                } else if (myNext.right != null) {
-                    myNext = myNext.right;
-                } else if (sizeForItertor != 1) myNext = back();
-                else myNext = null;
+                if (sizeForItertor == 1) myNext = null;
+                else if (found.right != null) {
+                    myNext = min(found.right);
+                } else myNext = back();
                 sizeForItertor--;
                 return found;
             }
         }
 
+        private Node<T> min(Node<T> t) {
+            while (t.left != null) {
+                stack.push(t);
+                t = t.left;
+            }
+            stack.push(t);
+            return t;
+        }
+
         private Node<T> back() {
             Node<T> last = stack.pop();
-            if (stack.peek().left == last && stack.peek().right != null)
-                return stack.peek().right;
+            if (stack.peek().left != null && stack.peek().left == last)
+                return stack.peek();
             else return back();
         }
 
@@ -198,10 +209,28 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
 
         @Override
         public void remove() {
-            stack.pop();
             BinaryTree.this.remove(found.value);
-            if (found.value.compareTo(stack.peek().value) < 0) myNext = stack.peek().left; // исправила, теперь достаются все элементы
-            else myNext = stack.peek().right;
+            if (found.right == null) return;
+            else {
+                Stack<Node<T>> partOfStack = new Stack<Node<T>>();
+                Node a = stack.pop();
+                while (found != stack.peek()) {
+                    partOfStack.add(stack.pop());
+                }
+                stack.pop();
+                if(stack.isEmpty() || found.left==null){
+                    while (!partOfStack.isEmpty()) {
+                        stack.push(partOfStack.pop());
+                    }
+                    stack.push(a);
+                }else {
+                    stack.push(a);
+                    while (!partOfStack.isEmpty()) {
+                        stack.push(partOfStack.pop());
+                    }
+                }
+            }
+
         }
     }
 
