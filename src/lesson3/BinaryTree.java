@@ -60,7 +60,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
         T key = (T) o;
         int oldSize = size;
         Node<T> parent = null;
-        if (root.value == key) {
+        if (root.value.equals(key)) {
             if (root.left == null && root.right == null) root = null;
             else if (root.left != null && root.right == null) root = root.left;
             else if (root.left == null && root.right != null) root = root.right;
@@ -84,28 +84,28 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
 
     private void remove(Node<T> t, T key, Node<T> parent) {
         if (t == null) return;
-        if (t.value != key) parent = t;
+        if (!t.value.equals(key)) parent = t;
         if (key.compareTo(t.value) < 0) remove(t.left, key, parent);
         if (key.compareTo(t.value) > 0) remove(t.right, key, parent);
-        if (t.value == key) {
+        if (t.value.equals(key)) {
             size--;
             if (t.right == null && t.left == null) {         //нет потомков
-                if (t == parent.right) parent.right = null;
+                if (t.equals(parent.right)) parent.right = null;
                 else parent.left = null;
             } else if (t.left == null && t.right != null) {  //только правый
-                if (t == parent.right) parent.right = t.right;
+                if (t.equals(parent.right)) parent.right = t.right;
                 else parent.left = t.right;
             } else if (t.right == null && t.left != null) {//только левый
-                if (t == parent.right) parent.right = t.left;
+                if (t.equals(parent.right)) parent.right = t.left;
                 else parent.left = t.left;
             } else {                                          //оба
                 if (t.right.left == null) {                   // проверяем сразу, мб правый потомок-найменьший
                     t.right.left = t.left;
-                    if (t == parent.right) parent.right = t.right;
+                    if (t.equals(parent.right)) parent.right = t.right;
                     else parent.left = t.right;
                 } else {
                     Node n = searchToRemove(t.right);    //родитель элемента который будем переставлять/поднимать
-                    if (t == parent.right) parent.right = n.left;
+                    if (t.equals(parent.right)) parent.right = n.left;
                     else parent.left = n.left;
                     n.left = n.left.right;
                     if (t.value.compareTo(parent.value) > 0) {
