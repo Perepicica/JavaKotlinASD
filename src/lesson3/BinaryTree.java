@@ -1,13 +1,12 @@
 package lesson3;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 // Attention: comparable supported but comparator is not
 @SuppressWarnings("WeakerAccess")
-public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implements SortedSet<T> {
+public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> {
 
     private static class Node<T> {
         final T value;
@@ -22,7 +21,6 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
     }
 
     private Node<T> root = null;
-
     private int size = 0;
 
     @Override
@@ -35,12 +33,10 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         Node<T> newNode = new Node<>(t);
         if (closest == null) {
             root = newNode;
-        }
-        else if (comparison < 0) {
+        } else if (comparison < 0) {
             assert closest.left == null;
             closest.left = newNode;
-        }
-        else {
+        } else {
             assert closest.right == null;
             closest.right = newNode;
         }
@@ -61,7 +57,72 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
 
     @Override
     public boolean remove(Object o) {
-        throw new UnsupportedOperationException();
+        T key = (T) o;
+        int oldSize = size;
+        Node<T> parent = null;
+        if (root.value.equals(key)) {
+            if (root.left == null && root.right == null) root = null;
+            else if (root.left != null && root.right == null) root = root.left;
+            else if (root.left == null && root.right != null) root = root.right;
+            else {
+                if (root.right.left == null) {
+                    root.right.left = root.left;
+                    root = root.right;
+                } else {
+                    Node n = searchToRemove(root.right);
+                    Node t = root;
+                    root = n.left;
+                    n.left = n.left.right;
+                    root.left = t.left;
+                    root.right = t.right;
+                }
+            }
+            size--;
+        } else remove(root, key, parent);
+        return (size < oldSize);
+    }
+
+    private void remove(Node<T> t, T key, Node<T> parent) {
+        if (t == null) return;
+        if (!t.value.equals(key)) parent = t;
+        if (key.compareTo(t.value) < 0) remove(t.left, key, parent);
+        if (key.compareTo(t.value) > 0) remove(t.right, key, parent);
+        if (t.value.equals(key)) {
+            size--;
+            if (t.right == null && t.left == null) {         //нет потомков
+                if (t.equals(parent.right)) parent.right = null;
+                else parent.left = null;
+            } else if (t.left == null && t.right != null) {  //только правый
+                if (t.equals(parent.right)) parent.right = t.right;
+                else parent.left = t.right;
+            } else if (t.right == null && t.left != null) {//только левый
+                if (t.equals(parent.right)) parent.right = t.left;
+                else parent.left = t.left;
+            } else {                                          //оба
+                if (t.right.left == null) {                   // проверяем сразу, мб правый потомок-найменьший
+                    t.right.left = t.left;
+                    if (t.equals(parent.right)) parent.right = t.right;
+                    else parent.left = t.right;
+                } else {
+                    Node n = searchToRemove(t.right);    //родитель элемента который будем переставлять/поднимать
+                    if (t.equals(parent.right)) parent.right = n.left;
+                    else parent.left = n.left;
+                    n.left = n.left.right;
+                    if (t.value.compareTo(parent.value) > 0) {
+                        parent.right.right = t.right;
+                        parent.right.left = t.left;
+                    } else {
+                        parent.left.right = t.right;
+                        parent.left.left = t.left;
+                    }
+                }
+            }
+        }
+    }
+
+    private Node searchToRemove(Node t) {
+        if (t.left.left == null) return t;
+        else return searchToRemove(t.left);
     }
 
     @Override
@@ -81,12 +142,10 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         int comparison = value.compareTo(start.value);
         if (comparison == 0) {
             return start;
-        }
-        else if (comparison < 0) {
+        } else if (comparison < 0) {
             if (start.left == null) return start;
             return find(start.left, value);
-        }
-        else {
+        } else {
             if (start.right == null) return start;
             return find(start.right, value);
         }
@@ -95,16 +154,50 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
     public class BinaryTreeIterator implements Iterator<T> {
 
         private Node<T> current = null;
+        private Node<T> myNext;
+        private Stack<Node<T>> stack;
+        Node<T> found;
+        int sizeForItertor = size;
 
-        private BinaryTreeIterator() {}
+        private BinaryTreeIterator() {
+            stack = new Stack<Node<T>>();
+            myNext = min(root);
+        }
 
         private Node<T> findNext() {
-            throw new UnsupportedOperationException();
+            if (sizeForItertor == 0) {
+                return null;
+            } else {
+                found = myNext;
+                if (sizeForItertor == 1) myNext = null;
+                else if (found.right != null) {
+                    myNext = min(found.right);
+                } else myNext = back();
+                sizeForItertor--;
+                return found;
+            }
         }
+
+        private Node<T> min(Node<T> t) {
+            while (t.left != null) {
+                stack.push(t);
+                t = t.left;
+            }
+            stack.push(t);
+            return t;
+        }
+
+        private Node<T> back() {
+            Node<T> last = stack.pop();
+            if (stack.peek().left != null && stack.peek().left == last)
+                return stack.peek();
+            else return back();
+        }
+
 
         @Override
         public boolean hasNext() {
-            return findNext() != null;
+            return myNext != null;
         }
 
         @Override
@@ -116,9 +209,30 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
 
         @Override
         public void remove() {
-            throw new UnsupportedOperationException();
+            BinaryTree.this.remove(found.value);
+            if (found.right == null) return;
+            else {
+                Stack<Node<T>> partOfStack = new Stack<Node<T>>();
+                Node a = stack.pop();
+                while (found != stack.peek()) {
+                    partOfStack.add(stack.pop());
+                }
+                stack.pop();
+                if(stack.isEmpty() || found.left==null){
+                    while (!partOfStack.isEmpty()) {
+                        stack.push(partOfStack.pop());
+                    }
+                    stack.push(a);
+                }else {
+                    stack.push(a);
+                    while (!partOfStack.isEmpty()) {
+                        stack.push(partOfStack.pop());
+                    }
+                }
+            }
         }
     }
+
 
     @NotNull
     @Override
@@ -131,48 +245,38 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         return size;
     }
 
+    public void prn() {
+        Queue<Node> q1 = new LinkedList<Node>();
 
-    @Nullable
-    @Override
-    public Comparator<? super T> comparator() {
-        return null;
+        q1.add(root);
+        prn(q1);
     }
 
-    @NotNull
-    @Override
-    public SortedSet<T> subSet(T fromElement, T toElement) {
-        throw new UnsupportedOperationException();
-    }
-
-    @NotNull
-    @Override
-    public SortedSet<T> headSet(T toElement) {
-        throw new UnsupportedOperationException();
-    }
-
-    @NotNull
-    @Override
-    public SortedSet<T> tailSet(T fromElement) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public T first() {
-        if (root == null) throw new NoSuchElementException();
-        Node<T> current = root;
-        while (current.left != null) {
-            current = current.left;
+    private void prn(Queue<Node> q1) {
+        Queue<Node> q2 = new LinkedList<Node>();
+        for (Node n : q1) {
+            if (n != null) System.out.print(n.value + " ");
+            else System.out.print("N  ");
         }
-        return current.value;
-    }
-
-    @Override
-    public T last() {
-        if (root == null) throw new NoSuchElementException();
-        Node<T> current = root;
-        while (current.right != null) {
-            current = current.right;
+        System.out.println();
+        while (!q1.isEmpty()) {
+            Node node = q1.poll();
+            if (node != null && node.left != null) q2.add(node.left);
+            else q2.add(null);
+            if (node != null && node.right != null) q2.add(node.right);
+            else q2.add(null);
         }
-        return current.value;
+        q1 = q2;
+        int count = 0;
+        for (Node n : q2) {
+            if (n != null) {
+                count++;
+                break;
+            }
+
+        }
+        if (count != 0) prn(q1);
+        else System.out.println();
+
     }
 }
